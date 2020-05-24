@@ -3,13 +3,13 @@ jdk:
   - oraclejdk11
 addons:
   sonarcloud:
-    organization: "adilsonsilva-github" # the key of the org you chose at step #3
+    organization: "adilsonsilva-github"
     token:
-      secure: "$SONAR_KEY" # encrypted value of your token
+      secure: "**************************" # encrypted value of your token
+
 script:
-  # other script steps might be done before running the actual analysis
-  #- sonar-scanner
-  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar -Dsonar.projectKey=api-accounts
+  # the following command line builds the project, runs the tests with coverage and then execute the SonarCloud analysis
+  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar
 
 deploy:
   provider: heroku
