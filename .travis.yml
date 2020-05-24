@@ -16,3 +16,4 @@ deploy:
   api_key:
     secure: "$HEROKU_PASSWORD"
   app: api-accounts
+
