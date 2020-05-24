@@ -1,7 +1,6 @@
 language: java
 jdk:
   - oraclejdk11
-
 addons:
   sonarcloud:
     organization: "adilsonsilva-github" # the key of the org you chose at step #3
@@ -10,7 +9,7 @@ addons:
 script:
   # other script steps might be done before running the actual analysis
   #- sonar-scanner
-  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar
+  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar -Dsonar.projectKey=api-accounts
 
 deploy:
   provider: heroku
