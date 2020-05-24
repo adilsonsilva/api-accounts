@@ -10,9 +10,9 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>br.com.</groupId>
-	<artifactId>accounts</artifactId>
+	<artifactId>api-accounts</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>accounts</name>
+	<name>api-accounts</name>
 	<description>API create accounts</description>
 
 	<properties>
