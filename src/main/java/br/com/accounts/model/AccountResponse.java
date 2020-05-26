@@ -24,4 +24,9 @@ public class AccountResponse<T> implements Serializable {
 	@JsonInclude(Include.NON_NULL)
 	private List<Error> erros;
 
+	public AccountResponse(T data) {
+		super();
+		this.data = data;
+	}
+
 }
