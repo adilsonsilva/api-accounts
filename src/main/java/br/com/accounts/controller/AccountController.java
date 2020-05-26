@@ -1,22 +1,67 @@
 package br.com.accounts.controller;
 
+import javax.validation.Valid;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.accounts.model.AccountRequest;
+import br.com.accounts.model.AccountDTO;
 import br.com.accounts.model.AccountResponse;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import br.com.accounts.model.RequestUpdate;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 @RestController
 @RequestMapping("/v1/accounts")
+@Api(value = "accounts", description = "the accounts API")
 public class AccountController {
 
+	@ApiOperation(value = "get accounts for email", nickname = "accountsEmailGet", notes = "", response = AccountResponse.class)
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "resource exist", response = AccountResponse.class),
+			@ApiResponse(code = 204, message = "resource does not exist"),
+			@ApiResponse(code = 400, message = "Invalid request", response = AccountResponse.class),
+			@ApiResponse(code = 404, message = "Resource not found", response = AccountResponse.class),
+			@ApiResponse(code = 500, message = "500 - Internal server error", response = AccountResponse.class) })
+	@GetMapping
+	public ResponseEntity<AccountResponse<AccountDTO>> accountsEmailGet(
+			@ApiParam(value = "user email", required = true) @PathVariable("email") String email) {
+
+		AccountDTO dto = new AccountDTO();
+
+		AccountResponse<AccountDTO> response = new AccountResponse<AccountDTO>();
+		response.setData(dto);
+
+		return ResponseEntity.ok(response);
+	}
+
+	@ApiOperation(value = "Create accounts", nickname = "accountsPost", notes = "", response = AccountResponse.class)
+	@ApiResponses(value = { @ApiResponse(code = 201, message = "Sucess create", response = AccountResponse.class),
+			@ApiResponse(code = 400, message = "Invalid request", response = AccountResponse.class),
+			@ApiResponse(code = 500, message = "Internal server error", response = AccountResponse.class) })
 	@PostMapping
-	public ResponseEntity<AccountResponse> createdAccount(@RequestBody AccountRequest request) {
-		return new ResponseEntity<AccountResponse>(new AccountResponse(), HttpStatus.OK);
+	public ResponseEntity<AccountDTO> accountsPost(
+			@ApiParam(value = "", required = true) @Valid @RequestBody AccountDTO body) {
+		return null;
+	}
+
+	@ApiOperation(value = "Update accounts", nickname = "accountsPut", notes = "", response = AccountResponse.class)
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "Sucess", response = AccountResponse.class),
+			@ApiResponse(code = 400, message = "Invalid request", response = AccountResponse.class),
+			@ApiResponse(code = 500, message = "500 - Internal server error", response = AccountResponse.class) })
+	@PutMapping
+	public ResponseEntity<AccountDTO> accountsPut(
+			@ApiParam(value = "", required = true) @Valid @RequestBody RequestUpdate body) {
+		return null;
 	}
 
 }
