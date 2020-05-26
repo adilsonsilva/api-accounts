@@ -20,7 +20,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString(exclude = "senha")
+@ToString(exclude = "password")
 public class AccountDTO implements Serializable {
 
 	/**
