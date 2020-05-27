@@ -10,5 +10,5 @@ import br.com.accounts.entity.AccountEntity;
 @Repository
 public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
 
-	Optional<AccountEntity> findByEmail(String email);
+	Optional<AccountEntity> findByEmailIgnoreCase(String email);
 }

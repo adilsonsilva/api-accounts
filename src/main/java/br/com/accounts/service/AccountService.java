@@ -29,7 +29,7 @@ public class AccountService {
 	}
 
 	public AccountResponse<AccountDTO> getAccountForEmail(String email) throws AccountNotFound {
-		Optional<AccountEntity> account = accountRepostoty.findByEmail(email);
+		Optional<AccountEntity> account = accountRepostoty.findByEmailIgnoreCase(email);
 
 		account.orElseThrow(() -> new EmailAccountNotFound("Email does not exist"));
 
