@@ -1,6 +1,9 @@
 language: java
 jdk:
-  - oraclejdk11
+  - openjdk11
+
+services:
+  - docker
 
 addons:
   sonarcloud:
@@ -11,68 +14,45 @@ script:
   # the following command line builds the project, runs the tests with coverage and then execute the SonarCloud analysis
   - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar
 
-services:
-  - docker
-
-#before_install:
-#    - docker pull adilsonsilva86/api-accounts
-#    - docker run -d -p 127.0.0.1:80:4567 adilsonsilva86/api-accounts /bin/sh -c "cd /root/api-accounts; bundle exec foreman start;"
-#    - docker ps -a
-#    - docker run adilsonsilva86/api-accounts /bin/sh -c "cd /root/api-accounts; bundle exec rake test"
-
 before_install:
-  # install heroku CLI
-  - wget -qO- https://toolbelt.heroku.com/install.sh | sh
-  # login to docker registries (dockerhub + heroku)
-  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-  - echo "$HEROKU_PASSWORD" | docker login -u "$HEROKU_USERNAME" --password-stdin registry.heroku.com
+  - docker pull openjdk:11-jdk-alpine
 
-#script:
-#    - bundle exec rake test
-
-#env:
-#  - DOCKER_COMPOSE_VERSION=1.4.2
-
-#before_install:
-#  - sudo rm /usr/local/bin/docker-compose
-#  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
-# - chmod +x docker-compose
-#  - sudo mv docker-compose /usr/local/bin
-
-#addons:
-#  apt:
-#    packages:
-#      - docker-ce
-
-#deploy:
-# provider: heroku
-# api_key: $HEROKU_PASSWORD
-# app: api-accounts
-
-#deploy:
-#  provider: script
-#  script: bash docker_push
-#  on:
-#    branch: master
-
-install:
-  # install deps
-  - yarn install
-
+# Test & Build SpringBoot app
 script:
-  - yarn test
-  - yarn build
-  # build docker images
-  - docker build -t unqpdes/todo-list-front .
-  - docker tag unqpdes/todo-list-front registry.heroku.com/$HEROKU_APP_NAME/web
+  - mvn test
+  - mvn clean package
 
+# Create Docker image for our app and push it to Dockerhub repository and send messages to the Teams channel after the `script` job is successfully executed
+after_success:
+  - export COMMIT=${TRAVIS_COMMIT::7}
+  - export TAG=`if [ ! -z "$TRAVIS_TAG" ]; then echo "$TRAVIS_TAG"; else echo "$TRAVIS_BRANCH--$COMMIT"; fi`
+  - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+  - docker-compose build
+  - docker tag $IMAGE_NAME:latest $IMAGE_NAME:$TAG
+  - docker push $IMAGE_NAME:$TAG
+  - export TITLE="$IMAGE_NAME:$TAG is built properly and pushed to Dockerhub"
+  - export TIMESTAMP=`date`
+  - export GIT_LOG=`git log -1 --pretty=%B $COMMIT`
+  - export TEXT="[build version] $TAG<br />[datetime] $TIMESTAMP<br />[changelog] $GIT_LOG<br />"
+  - chmod +x send_to_teams.sh && ./send_to_teams.sh
+
+# If the `script` job fails, it will send a failure message to Teams channel
+after_failure:
+  - export TITLE="Travis:$TRAVIS_JOB_ID -- build job is failed"
+  - export TEXT=[datetime]:`date`
+
+# Allow Travis to help deploy the app on Heroku
 deploy:
-  provider: script
-  script: 
-    # push to dockerhub & heroku
-    docker push adilsonsilva86/api-accounts;
-    docker push registry.heroku.com/$HEROKU_APP_NAME/web;
-    heroku container:release web --app $HEROKU_APP_NAME
+  provider: heroku
+  api-key:
+    secure: "$HEROKU_PASSWORD"
+  app: api-accounts
   on:
-    branch: master
+    tags: true
+    repo: "$IMAGE_NAME"
 
+# Send the message of success after the deploy is done properly
+after_deploy:
+  - export TITLE="🎉🎉🎉New version $TAG is deployed to Heroku production🎉🎉🎉"
+  - export TEXT=[datetime]:`date`
+  - ./send_to_teams.sh
