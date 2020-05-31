@@ -14,36 +14,65 @@ script:
 services:
   - docker
 
-before_install:
-    - docker pull adilsonsilva86/api-accounts
-    - docker run -d -p 127.0.0.1:80:4567 adilsonsilva86/api-accounts /bin/sh -c "cd /root/api-accounts; bundle exec foreman start;"
-    - docker ps -a
-    - docker run adilsonsilva86/api-accounts /bin/sh -c "cd /root/api-accounts; bundle exec rake test"
-
-script:
-    - bundle exec rake test
-
-env:
-  - DOCKER_COMPOSE_VERSION=1.4.2
+#before_install:
+#    - docker pull adilsonsilva86/api-accounts
+#    - docker run -d -p 127.0.0.1:80:4567 adilsonsilva86/api-accounts /bin/sh -c "cd /root/api-accounts; bundle exec foreman start;"
+#    - docker ps -a
+#    - docker run adilsonsilva86/api-accounts /bin/sh -c "cd /root/api-accounts; bundle exec rake test"
 
 before_install:
-  - sudo rm /usr/local/bin/docker-compose
-  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
-  - chmod +x docker-compose
-  - sudo mv docker-compose /usr/local/bin
+  # install heroku CLI
+  - wget -qO- https://toolbelt.heroku.com/install.sh | sh
+  # login to docker registries (dockerhub + heroku)
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - echo "$HEROKU_PASSWORD" | docker login -u "$HEROKU_USERNAME" --password-stdin registry.heroku.com
 
-addons:
-  apt:
-    packages:
-      - docker-ce
+#script:
+#    - bundle exec rake test
+
+#env:
+#  - DOCKER_COMPOSE_VERSION=1.4.2
+
+#before_install:
+#  - sudo rm /usr/local/bin/docker-compose
+#  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+# - chmod +x docker-compose
+#  - sudo mv docker-compose /usr/local/bin
+
+#addons:
+#  apt:
+#    packages:
+#      - docker-ce
 
 #deploy:
 # provider: heroku
 # api_key: $HEROKU_PASSWORD
 # app: api-accounts
 
+#deploy:
+#  provider: script
+#  script: bash docker_push
+#  on:
+#    branch: master
+
+install:
+  # install deps
+  - yarn install
+
+script:
+  - yarn test
+  - yarn build
+  # build docker images
+  - docker build -t unqpdes/todo-list-front .
+  - docker tag unqpdes/todo-list-front registry.heroku.com/$HEROKU_APP_NAME/web
+
 deploy:
   provider: script
-  script: bash docker_push
+  script: 
+    # push to dockerhub & heroku
+    docker push adilsonsilva86/api-accounts;
+    docker push registry.heroku.com/$HEROKU_APP_NAME/web;
+    heroku container:release web --app $HEROKU_APP_NAME
   on:
     branch: master
+
