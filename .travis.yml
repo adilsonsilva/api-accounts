@@ -2,22 +2,6 @@ language: java
 jdk:
   - oraclejdk11
 
-services:
-  - docker
-
-before_install:
-  # login to docker registries (dockerhub + heroku)
-  - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-
-install:
-  # install deps
-  - yarn install
-script:
-  - yarn test
-  - yarn build
-  # build docker images
-  - docker build -t unqpdes/todo-list-front .
-
 addons:
   sonarcloud:
     organization: "adilsonsilva-github"
@@ -27,6 +11,32 @@ script:
   # the following command line builds the project, runs the tests with coverage and then execute the SonarCloud analysis
   - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar
 
+services:
+  - docker
+
+before_install:
+    - docker pull adilsonsilva86/api-accounts
+    - docker run -d -p 127.0.0.1:80:4567 adilsonsilva86/api-accounts /bin/sh -c "cd /root/api-accounts; bundle exec foreman start;"
+    - docker ps -a
+    - docker run adilsonsilva86/api-accounts /bin/sh -c "cd /root/api-accounts; bundle exec rake test"
+
+script:
+    - bundle exec rake test
+
+env:
+  - DOCKER_COMPOSE_VERSION=1.4.2
+
+before_install:
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+
+addons:
+  apt:
+    packages:
+      - docker-ce
+
 #deploy:
 # provider: heroku
 # api_key: $HEROKU_PASSWORD
@@ -34,7 +44,6 @@ script:
 
 deploy:
   provider: script
-  script:
-    # push to dockerhub
-    docker push unqpdes/todo-list-front;
-  branch: master
+  script: bash docker_push
+  on:
+    branch: master
