@@ -1,6 +1,23 @@
 language: java
 jdk:
   - oraclejdk11
+
+services:
+  - docker
+
+before_install:
+  # login to docker registries (dockerhub + heroku)
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+install:
+  # install deps
+  - yarn install
+script:
+  - yarn test
+  - yarn build
+  # build docker images
+  - docker build -t unqpdes/todo-list-front .
+
 addons:
   sonarcloud:
     organization: "adilsonsilva-github"
@@ -10,8 +27,14 @@ script:
   # the following command line builds the project, runs the tests with coverage and then execute the SonarCloud analysis
   - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar
 
-deploy:
-  provider: heroku
-  api_key: $HEROKU_PASSWORD
-  app: api-accounts
+#deploy:
+# provider: heroku
+# api_key: $HEROKU_PASSWORD
+# app: api-accounts
 
+deploy:
+  provider: script
+  script:
+    # push to dockerhub
+    docker push unqpdes/todo-list-front;
+  branch: master
