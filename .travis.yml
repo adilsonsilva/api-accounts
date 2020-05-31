@@ -1,6 +1,6 @@
 language: java
 jdk:
-  - openjdk11
+  - oraclejdk11
 
 services:
   - docker
@@ -15,7 +15,7 @@ script:
   - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar
 
 before_install:
-  - docker pull openjdk:11-jdk-alpine
+  - docker pull oraclejdk11
 
 # Test & Build SpringBoot app
 script:
