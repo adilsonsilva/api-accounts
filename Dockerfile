@@ -1,4 +1,4 @@
-FROM openjdk:11-jre
+FROM openjdk:11-jdk-slim
 RUN mkdir app
 ARG JAR_FILE
 ADD /target/${JAR_FILE} /app/api-accounts.jar
